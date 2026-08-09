@@ -228,16 +228,6 @@
   overflow: hidden;
 }
 
-.hero-latest .video-frame iframe {
-  filter: saturate(0.62) brightness(0.74) contrast(0.96);
-  transition: filter 220ms ease;
-}
-
-.hero-latest .video-frame:hover iframe,
-.hero-latest .video-frame:focus-within iframe {
-  filter: saturate(1) brightness(1) contrast(1);
-}
-
 .hero-latest-action {
   align-items: center;
   border-top: 1px solid var(--line);
@@ -297,11 +287,5 @@
 
   .hero-stats > div:nth-child(4) {
     border-top: 1px solid var(--line);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-latest .video-frame iframe {
-    transition: none;
   }
 }
