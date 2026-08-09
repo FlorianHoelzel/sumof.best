@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   FormEvent,
+  MouseEvent,
   useEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
+import ArchiveLoadingView from "../archive-loading-view";
 
 type LookupResult = {
   id: string;
@@ -68,6 +70,7 @@ export default function V2LandingPage() {
   const [phase, setPhase] = useState<LookupPhase>("idle");
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [archiveTarget, setArchiveTarget] = useState<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   const cleanUsername = username.trim().replace(/^@/, "");
   const isLoading = phase === "loading";
@@ -154,6 +157,22 @@ export default function V2LandingPage() {
     return () => window.removeEventListener(FOCUS_SEARCH_EVENT, focusSearch);
   }, []);
 
+  useEffect(() => {
+    if (!archiveTarget) return;
+
+    let navigationFrame = 0;
+    const paintFrame = window.requestAnimationFrame(() => {
+      navigationFrame = window.requestAnimationFrame(() => {
+        window.location.assign(archiveTarget);
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(paintFrame);
+      if (navigationFrame) window.cancelAnimationFrame(navigationFrame);
+    };
+  }, [archiveTarget]);
+
   function rememberRunner(payload: LookupResult) {
     if (!payload.archiveUrl) return;
 
@@ -165,6 +184,29 @@ export default function V2LandingPage() {
     };
     window.localStorage.setItem(RUNNER_KEY, JSON.stringify(nextRunner));
     notifyPreferenceChange();
+  }
+
+  function openArchive(url: string) {
+    requestRef.current?.abort();
+    setArchiveTarget(url);
+  }
+
+  function openArchiveLink(
+    event: MouseEvent<HTMLAnchorElement>,
+    url: string,
+  ) {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    openArchive(url);
   }
 
   function updateUsername(value: string) {
@@ -197,7 +239,7 @@ export default function V2LandingPage() {
 
     if (result?.archiveUrl) {
       rememberRunner(result);
-      window.location.assign(result.archiveUrl);
+      openArchive(result.archiveUrl);
       return;
     }
 
@@ -213,7 +255,7 @@ export default function V2LandingPage() {
       setPhase("success");
       if (payload.archiveUrl) {
         rememberRunner(payload);
-        window.location.assign(payload.archiveUrl);
+        openArchive(payload.archiveUrl);
       } else {
         setMessage("Profile found, but its archive could not be opened.");
       }
@@ -226,6 +268,8 @@ export default function V2LandingPage() {
       if (requestRef.current === controller) requestRef.current = null;
     }
   }
+
+  if (archiveTarget) return <ArchiveLoadingView />;
 
   return (
     <main className="v2-landing">
@@ -266,7 +310,11 @@ export default function V2LandingPage() {
                 )}
                 <strong>@{remembered.name}</strong>
               </div>
-              <Link className="v2-returning-open" href={remembered.archiveUrl!}>
+              <Link
+                className="v2-returning-open"
+                href={remembered.archiveUrl!}
+                onClick={(event) => openArchiveLink(event, remembered.archiveUrl!)}
+              >
                 OPEN ARCHIVE
               </Link>
               <button
@@ -274,7 +322,7 @@ export default function V2LandingPage() {
                 type="button"
                 onClick={() => setShowSearch(true)}
               >
-                USE ANOTHER USERNAME
+                LOOK FOR ANOTHER USER
               </button>
             </div>
           ) : (
@@ -329,7 +377,10 @@ export default function V2LandingPage() {
                   {result.archiveUrl && (
                     <Link
                       href={result.archiveUrl}
-                      onClick={() => rememberRunner(result)}
+                      onClick={(event) => {
+                        rememberRunner(result);
+                        openArchiveLink(event, result.archiveUrl!);
+                      }}
                     >
                       OPEN
                     </Link>
