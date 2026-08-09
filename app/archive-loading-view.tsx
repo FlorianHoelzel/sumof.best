@@ -1,7 +1,19 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
 import "./archive-loading.css";
 
 export default function ArchiveLoadingView() {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   return (
     <main className="archive-loading-v2" aria-busy="true" aria-live="polite">
       <header className="archive-loading-v2-header">
