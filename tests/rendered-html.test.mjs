@@ -158,6 +158,10 @@ test("server-renders the archive overview", async () => {
   assert.match(html, /href="\/">SUM OF BEST<\/a>/);
   assert.match(html, /class="accent-name" href="\/volpey">VOLPEY<\/a>/i);
   assert.match(html, /href="\/volpey\/passport"/i);
+  assert.match(html, /LATEST PB/i);
+  assert.match(html, /aria-label="Archive totals"/i);
+  assert.match(html, /aria-label="Latest personal best"/i);
+  assert.doesNotMatch(html, /ARCHIVE AT A GLANCE/i);
   assert.match(html, /<h2>GAME INDEX<\/h2>/i);
   assert.match(html, /\d{2}(?:<!-- -->)? TITLES/);
   assert.doesNotMatch(html, /PB STAMPS/);

@@ -83,6 +83,21 @@ function compactDuration(totalSeconds: number) {
   return `${remainder}s`;
 }
 
+function compactPreciseDuration(totalSeconds: number) {
+  const totalMilliseconds = Math.max(0, Math.round(totalSeconds * 1000));
+  const hours = Math.floor(totalMilliseconds / 3_600_000);
+  const minutes = Math.floor((totalMilliseconds % 3_600_000) / 60_000);
+  const seconds = Math.floor((totalMilliseconds % 60_000) / 1000);
+  const milliseconds = totalMilliseconds % 1000;
+  const secondsLabel = milliseconds
+    ? `${seconds}.${String(milliseconds).padStart(3, "0")}s`
+    : `${seconds}s`;
+
+  if (hours) return `${hours}h ${minutes}m ${secondsLabel}`;
+  if (minutes) return `${minutes}m ${secondsLabel}`;
+  return secondsLabel;
+}
+
 function embedUrl(url: string | null, twitchParent: string | null = null) {
   if (!url) return null;
   try {
@@ -1726,7 +1741,13 @@ function ArchiveOverview({ histories }: { histories: History[] }) {
   );
 }
 
-export default function PBHistory({ data }: { data: SiteData }) {
+export default function PBHistory({
+  data,
+  heroVariant = "current",
+}: {
+  data: SiteData;
+  heroVariant?: "current" | "stats-latest";
+}) {
   const games = useMemo(() => archiveGames(data.histories), [data.histories]);
 
   const datedRuns = data.histories
@@ -1748,13 +1769,56 @@ export default function PBHistory({ data }: { data: SiteData }) {
       : data.profile.name.length <= 14
         ? "medium"
         : "long";
+  const datedEntries = data.histories
+    .flatMap((history) =>
+      history.runs.map((run, index) => ({
+        history,
+        run,
+        previous: index > 0 ? history.runs[index - 1] : null,
+      })),
+    )
+    .filter(({ run }) => run.date !== "Unknown")
+    .sort((a, b) => b.run.date.localeCompare(a.run.date));
+  const latestEntry = datedEntries[0];
+  const latestVideo = latestEntry ? embedUrl(latestEntry.run.video) : null;
+  const latestImprovement = latestEntry?.previous
+    ? latestEntry.previous.seconds - latestEntry.run.seconds
+    : null;
+  const latestImprovementLabel =
+    latestImprovement === null
+      ? "First PB"
+      : compactPreciseDuration(latestImprovement);
+  const latestMetricLength = Math.max(
+    latestEntry?.run.time.length ?? 0,
+    latestImprovementLabel.length,
+  );
+  const latestMetricSize =
+    latestMetricLength > 10
+      ? "is-extra-long"
+      : latestMetricLength > 8
+        ? "is-long"
+        : latestMetricLength > 6
+          ? "is-medium"
+          : "is-short";
+  const daysSincePrevious = latestEntry?.previous
+    ? Math.max(
+        0,
+        Math.round(
+          (Date.parse(`${latestEntry.run.date}T00:00:00Z`) -
+            Date.parse(`${latestEntry.previous.date}T00:00:00Z`)) /
+            86_400_000,
+        ),
+      )
+    : null;
 
   return (
     <main id="top" style={archiveStyle(data.profile)}>
       <ArchiveNavigator games={games} />
       <UserHeader profile={data.profile} />
 
-      <section className="hero">
+      <section
+        className={`hero${heroVariant === "stats-latest" ? " hero-stats-latest" : ""}`}
+      >
         <div className="hero-intro">
           <div className="hero-profile">
             {profileAvatar ? (
@@ -1770,36 +1834,133 @@ export default function PBHistory({ data }: { data: SiteData }) {
             </span>
           </div>
 
-          <h1 className={`hero-title-${heroTitleMode}`}>
-            <span className="accent-name">{data.profile.name}’s</span>{" "}
-            {heroTitleMode === "long" && <br />}
-            Sum of Best
-          </h1>
-          <p className="hero-lede">
-            A complete history of {data.profile.name}’s speedruns.
-            Current records, obsolete PBs, and every improvement in between.
-          </p>
-          <p>
-            Choose a game to explore the timeline and watch the available runs.
-          </p>
+          <div className="hero-core">
+            <h1 className={`hero-title-${heroTitleMode}`}>
+              <span className="accent-name">{data.profile.name}’s</span>{" "}
+              {heroTitleMode === "long" && <br />}
+              Sum of Best
+            </h1>
+            {heroVariant === "stats-latest" ? (
+              <dl className="hero-stats" aria-label="Archive totals">
+                <div>
+                  <dt>PBs</dt>
+                  <dd>{data.stats.pbRuns}</dd>
+                </div>
+                <div>
+                  <dt>Games</dt>
+                  <dd>{data.stats.games}</dd>
+                </div>
+                <div>
+                  <dt>Categories</dt>
+                  <dd>{data.stats.histories}</dd>
+                </div>
+                <div>
+                  <dt>Active years</dt>
+                  <dd>{yearsTracked}</dd>
+                </div>
+              </dl>
+            ) : (
+              <>
+                <p className="hero-lede">
+                  A complete history of {data.profile.name}’s speedruns.
+                  Current records, obsolete PBs, and every improvement in between.
+                </p>
+                <p>
+                  Choose a game to explore the timeline and watch the available runs.
+                </p>
+              </>
+            )}
+          </div>
           <a className="primary-link" href="#games">
             EXPLORE THE RUNS <span>↓</span>
           </a>
         </div>
 
-        <aside className="hero-note" aria-label="A note about the archive">
-          <span className="note-label">ARCHIVE AT A GLANCE</span>
-          <p>
-            <strong>{data.stats.games} games</strong>,{" "}
-            <strong>{data.stats.histories} categories</strong>, and{" "}
-            <strong>{data.stats.pbRuns} PBs</strong> collected over{" "}
-            <strong>{yearsTracked} years</strong>.
-          </p>
-          <p>
-            That adds up to {totalHours} hours and {totalMinutes} minutes of
-            finished runs across {data.stats.platforms} platforms.
-          </p>
-        </aside>
+        {heroVariant === "stats-latest" && latestEntry ? (
+          <aside className="hero-latest" aria-label="Latest personal best">
+            <div className="video-topline">
+              <span>LATEST PB</span>
+              <span>{displayDate(latestEntry.run.date)}</span>
+            </div>
+            <div className="hero-latest-copy">
+              <h2>{latestEntry.history.gameName}</h2>
+              <p>
+                {[
+                  latestEntry.history.categoryName,
+                  latestEntry.history.levelName,
+                  latestEntry.history.variant,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              <dl className={`hero-latest-primary ${latestMetricSize}`}>
+                <div>
+                  <dt>Time</dt>
+                  <dd>{latestEntry.run.time}</dd>
+                </div>
+                <div>
+                  <dt>Time saved</dt>
+                  <dd>{latestImprovementLabel}</dd>
+                </div>
+              </dl>
+              <dl className="hero-latest-meta">
+                <div>
+                  <dt>Previous PB</dt>
+                  <dd>{latestEntry.previous?.time ?? "-"}</dd>
+                </div>
+                <div>
+                  <dt>Since previous</dt>
+                  <dd>
+                    {daysSincePrevious === null
+                      ? "-"
+                      : `${daysSincePrevious} ${daysSincePrevious === 1 ? "day" : "days"}`}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Category PBs</dt>
+                  <dd>{latestEntry.history.runs.length}</dd>
+                </div>
+              </dl>
+            </div>
+            <div className="video-frame">
+              {latestVideo ? (
+                <iframe
+                  src={latestVideo}
+                  title={`${latestEntry.history.gameName} ${latestEntry.history.categoryName} in ${latestEntry.run.time}`}
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="video-fallback">
+                  <p>No embeddable video for this run.</p>
+                </div>
+              )}
+            </div>
+            <a
+              className="hero-latest-action"
+              href={latestEntry.run.runUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              WATCH RUN <span>↗</span>
+            </a>
+          </aside>
+        ) : (
+          <aside className="hero-note" aria-label="A note about the archive">
+            <span className="note-label">ARCHIVE AT A GLANCE</span>
+            <p>
+              <strong>{data.stats.games} games</strong>,{" "}
+              <strong>{data.stats.histories} categories</strong>, and{" "}
+              <strong>{data.stats.pbRuns} PBs</strong> collected over{" "}
+              <strong>{yearsTracked} years</strong>.
+            </p>
+            <p>
+              That adds up to {totalHours} hours and {totalMinutes} minutes of
+              finished runs across {data.stats.platforms} platforms.
+            </p>
+          </aside>
+        )}
       </section>
 
       <ArchiveOverview histories={data.histories} />

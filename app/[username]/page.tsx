@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import speedrunData from "../data/speedruns.json";
+import "../archive-v2.css";
 import PBHistory from "../pb-history";
 import { getUserArchive } from "../archive-cache";
 
@@ -124,7 +125,7 @@ export default async function UserArchive({
           __html: JSON.stringify(profileJsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <PBHistory data={data} />
+      <PBHistory data={data} heroVariant="stats-latest" />
     </>
   );
 }
