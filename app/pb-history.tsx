@@ -1769,47 +1769,104 @@ export default function PBHistory({
       : data.profile.name.length <= 14
         ? "medium"
         : "long";
-  const datedEntries = data.histories
-    .flatMap((history) =>
-      history.runs.map((run, index) => ({
-        history,
-        run,
-        previous: index > 0 ? history.runs[index - 1] : null,
-      })),
-    )
-    .filter(({ run }) => run.date !== "Unknown")
-    .sort((a, b) => b.run.date.localeCompare(a.run.date));
-  const latestEntry = datedEntries[0];
-  const latestVideo = latestEntry ? embedUrl(latestEntry.run.video) : null;
-  const latestImprovement = latestEntry?.previous
-    ? latestEntry.previous.seconds - latestEntry.run.seconds
-    : null;
-  const latestImprovementLabel =
-    latestImprovement === null
-      ? "First PB"
-      : compactPreciseDuration(latestImprovement);
-  const latestMetricLength = Math.max(
-    latestEntry?.run.time.length ?? 0,
-    latestImprovementLabel.length,
+  const datedEntries = useMemo(
+    () =>
+      data.histories
+        .flatMap((history) =>
+          history.runs.map((run, index) => ({
+            history,
+            run,
+            previous: index > 0 ? history.runs[index - 1] : null,
+          })),
+        )
+        .filter(({ run }) => run.date !== "Unknown")
+        .sort((a, b) => b.run.date.localeCompare(a.run.date)),
+    [data.histories],
   );
-  const latestMetricSize =
-    latestMetricLength > 10
-      ? "is-extra-long"
-      : latestMetricLength > 8
-        ? "is-long"
-        : latestMetricLength > 6
-          ? "is-medium"
-          : "is-short";
-  const daysSincePrevious = latestEntry?.previous
+  const timelineEntries = useMemo(
+    () => [...datedEntries].reverse(),
+    [datedEntries],
+  );
+  const [selectedTimelineIndex, setSelectedTimelineIndex] = useState(() =>
+    Math.max(0, timelineEntries.length - 1),
+  );
+  const [settledTimelineIndex, setSettledTimelineIndex] = useState(() =>
+    Math.max(0, timelineEntries.length - 1),
+  );
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () => setSettledTimelineIndex(selectedTimelineIndex),
+      180,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [selectedTimelineIndex]);
+
+  const timelineYears = Array.from(
+    { length: yearsTracked },
+    (_, index) => earliestYear + index,
+  );
+  const timelineEvents = useMemo(() => {
+    const totalsByYear = new Map<number, number>();
+    const seenByYear = new Map<number, number>();
+
+    timelineEntries.forEach(({ run }) => {
+      const year = new Date(`${run.date}T00:00:00Z`).getUTCFullYear();
+      totalsByYear.set(year, (totalsByYear.get(year) ?? 0) + 1);
+    });
+
+    return timelineEntries.map((entry, index) => {
+      const year = new Date(`${entry.run.date}T00:00:00Z`).getUTCFullYear();
+      const ordinal = seenByYear.get(year) ?? 0;
+      const totalInYear = totalsByYear.get(year) ?? 1;
+      seenByYear.set(year, ordinal + 1);
+
+      return {
+        entry,
+        index,
+        position:
+          ((year - earliestYear + (ordinal + 1) / (totalInYear + 1)) /
+            yearsTracked) *
+          100,
+      };
+    });
+  }, [earliestYear, timelineEntries, yearsTracked]);
+  const selectedEvent =
+    timelineEvents[selectedTimelineIndex] ?? timelineEvents.at(-1);
+  const selectedEntry = selectedEvent?.entry ?? datedEntries[0];
+  const settledEntry =
+    timelineEntries[settledTimelineIndex] ?? selectedEntry;
+  const selectedVideo = settledEntry
+    ? embedUrl(settledEntry.run.video)
+    : null;
+  const selectedImprovement = selectedEntry?.previous
+    ? selectedEntry.previous.seconds - selectedEntry.run.seconds
+    : null;
+  const selectedImprovementLabel =
+    selectedImprovement === null
+      ? "First PB"
+      : compactPreciseDuration(selectedImprovement);
+  const daysSincePrevious = selectedEntry?.previous
     ? Math.max(
         0,
         Math.round(
-          (Date.parse(`${latestEntry.run.date}T00:00:00Z`) -
-            Date.parse(`${latestEntry.previous.date}T00:00:00Z`)) /
+          (Date.parse(`${selectedEntry.run.date}T00:00:00Z`) -
+            Date.parse(`${selectedEntry.previous.date}T00:00:00Z`)) /
             86_400_000,
         ),
       )
     : null;
+  const isLatestSelection =
+    selectedTimelineIndex === timelineEntries.length - 1;
+  const selectedCategory = selectedEntry
+    ? [
+        selectedEntry.history.categoryName,
+        selectedEntry.history.levelName,
+        selectedEntry.history.variant,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
 
   return (
     <main id="top" style={archiveStyle(data.profile)}>
@@ -1841,24 +1898,107 @@ export default function PBHistory({
               Sum of Best
             </h1>
             {heroVariant === "stats-latest" ? (
-              <dl className="hero-stats" aria-label="Archive totals">
-                <div>
-                  <dt>PBs</dt>
-                  <dd>{data.stats.pbRuns}</dd>
-                </div>
-                <div>
-                  <dt>Games</dt>
-                  <dd>{data.stats.games}</dd>
-                </div>
-                <div>
-                  <dt>Categories</dt>
-                  <dd>{data.stats.histories}</dd>
-                </div>
-                <div>
-                  <dt>Active years</dt>
-                  <dd>{yearsTracked}</dd>
-                </div>
-              </dl>
+              <>
+                <dl className="hero-stats" aria-label="Archive totals">
+                  <div>
+                    <dt>PBs</dt>
+                    <dd>{data.stats.pbRuns}</dd>
+                  </div>
+                  <div>
+                    <dt>Games</dt>
+                    <dd>{data.stats.games}</dd>
+                  </div>
+                  <div>
+                    <dt>Categories</dt>
+                    <dd>{data.stats.histories}</dd>
+                  </div>
+                  <div>
+                    <dt>Active years</dt>
+                    <dd>{yearsTracked}</dd>
+                  </div>
+                </dl>
+                {selectedEntry && selectedEvent ? (
+                  <div className="hero-career-timeline">
+                    <div className="hero-career-timeline-heading">
+                      <span>CAREER TIMELINE</span>
+                      <span>{displayDate(selectedEntry.run.date)}</span>
+                    </div>
+                    <div
+                      className="hero-career-years"
+                      style={{
+                        gridTemplateColumns: `repeat(${timelineYears.length}, minmax(0, 1fr))`,
+                      }}
+                      aria-hidden="true"
+                    >
+                      {timelineYears.map((year) => (
+                        <span key={year}>{year}</span>
+                      ))}
+                    </div>
+                    <div className="hero-career-track">
+                      <span className="hero-career-line" aria-hidden="true" />
+                      <span
+                        className="hero-career-progress"
+                        style={{ width: `${selectedEvent.position}%` }}
+                        aria-hidden="true"
+                      />
+                      <div className="hero-career-ticks" aria-hidden="true">
+                        {timelineEvents.map((timelineEvent) => (
+                          <span
+                            key={timelineEvent.entry.run.id}
+                            style={{ left: `${timelineEvent.position}%` }}
+                          />
+                        ))}
+                      </div>
+                      <span
+                        className="hero-career-playhead"
+                        style={{ left: `${selectedEvent.position}%` }}
+                        aria-hidden="true"
+                      />
+                      <input
+                        className="hero-career-range"
+                        type="range"
+                        min="0"
+                        max="1000"
+                        value={Math.round(selectedEvent.position * 10)}
+                        aria-label="Browse personal best history"
+                        aria-valuetext={`${displayDate(selectedEntry.run.date)}, ${selectedEntry.history.gameName}, ${selectedCategory}`}
+                        onChange={(event) => {
+                          const position = Number(event.currentTarget.value) / 10;
+                          const nearest = timelineEvents.reduce((best, item) =>
+                            Math.abs(item.position - position) <
+                            Math.abs(best.position - position)
+                              ? item
+                              : best,
+                          );
+                          setSelectedTimelineIndex(nearest.index);
+                        }}
+                        onKeyDown={(event) => {
+                          const direction =
+                            event.key === "ArrowLeft" || event.key === "ArrowDown"
+                              ? -1
+                              : event.key === "ArrowRight" || event.key === "ArrowUp"
+                                ? 1
+                                : 0;
+                          if (direction) {
+                            event.preventDefault();
+                            setSelectedTimelineIndex((index) =>
+                              Math.max(
+                                0,
+                                Math.min(timelineEntries.length - 1, index + direction),
+                              ),
+                            );
+                          } else if (event.key === "Home" || event.key === "End") {
+                            event.preventDefault();
+                            setSelectedTimelineIndex(
+                              event.key === "Home" ? 0 : timelineEntries.length - 1,
+                            );
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </>
             ) : (
               <>
                 <p className="hero-lede">
@@ -1876,37 +2016,34 @@ export default function PBHistory({
           </a>
         </div>
 
-        {heroVariant === "stats-latest" && latestEntry ? (
-          <aside className="hero-latest" aria-label="Latest personal best">
+        {heroVariant === "stats-latest" && selectedEntry ? (
+          <aside
+            className="hero-latest"
+            aria-label={isLatestSelection ? "Latest personal best" : "Selected personal best"}
+          >
             <div className="video-topline">
-              <span>LATEST PB</span>
-              <span>{displayDate(latestEntry.run.date)}</span>
+              <span>{isLatestSelection ? "LATEST PB" : "ARCHIVE PB"}</span>
+              <span>{displayDate(selectedEntry.run.date)}</span>
             </div>
             <div className="hero-latest-copy">
-              <h2>{latestEntry.history.gameName}</h2>
-              <p>
-                {[
-                  latestEntry.history.categoryName,
-                  latestEntry.history.levelName,
-                  latestEntry.history.variant,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-              <dl className={`hero-latest-primary ${latestMetricSize}`}>
+              <h2 title={selectedEntry.history.gameName}>
+                {selectedEntry.history.gameName}
+              </h2>
+              <p title={selectedCategory}>{selectedCategory}</p>
+              <dl className="hero-latest-primary">
                 <div>
                   <dt>Time</dt>
-                  <dd>{latestEntry.run.time}</dd>
+                  <dd>{selectedEntry.run.time}</dd>
                 </div>
                 <div>
                   <dt>Time saved</dt>
-                  <dd>{latestImprovementLabel}</dd>
+                  <dd>{selectedImprovementLabel}</dd>
                 </div>
               </dl>
               <dl className="hero-latest-meta">
                 <div>
                   <dt>Previous PB</dt>
-                  <dd>{latestEntry.previous?.time ?? "-"}</dd>
+                  <dd>{selectedEntry.previous?.time ?? "-"}</dd>
                 </div>
                 <div>
                   <dt>Since previous</dt>
@@ -1918,15 +2055,15 @@ export default function PBHistory({
                 </div>
                 <div>
                   <dt>Category PBs</dt>
-                  <dd>{latestEntry.history.runs.length}</dd>
+                  <dd>{selectedEntry.history.runs.length}</dd>
                 </div>
               </dl>
             </div>
             <div className="video-frame">
-              {latestVideo ? (
+              {selectedVideo ? (
                 <iframe
-                  src={latestVideo}
-                  title={`${latestEntry.history.gameName} ${latestEntry.history.categoryName} in ${latestEntry.run.time}`}
+                  src={selectedVideo}
+                  title={`${settledEntry.history.gameName} ${settledEntry.history.categoryName} in ${settledEntry.run.time}`}
                   loading="lazy"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
@@ -1939,7 +2076,7 @@ export default function PBHistory({
             </div>
             <a
               className="hero-latest-action"
-              href={latestEntry.run.runUrl}
+              href={selectedEntry.run.runUrl}
               target="_blank"
               rel="noreferrer"
             >
