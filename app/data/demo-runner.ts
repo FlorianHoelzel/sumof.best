@@ -1,0 +1,72 @@
+import type { SiteData } from "../pb-history";
+
+export const demoRunnerData: SiteData = {
+  generatedAt: "2026-08-09T00:00:00.000Z",
+  source: "demo",
+  profile: {
+    name: "demo_runner",
+    country: "DEMO DATA",
+    avatar: null,
+    nameColor: { from: "#c8c7c2", to: "#c8c7c2" },
+    profileUrl: "/v2",
+  },
+  stats: {
+    verifiedRuns: 10,
+    platforms: 2,
+    totalRunSeconds: 21816.29,
+    pbRuns: 10,
+    games: 3,
+    histories: 3,
+  },
+  histories: [
+    {
+      id: "demo-celeste-any",
+      gameId: "o1y9j9v6",
+      gameName: "Celeste",
+      gameAbbreviation: "celeste",
+      gameCover: "https://www.speedrun.com/static/game/o1y9j9v6/cover?v=9003452",
+      categoryName: "Any%",
+      levelName: null,
+      variant: "PC",
+      timingMethod: "realtime_noloads",
+      runs: [
+        { id: "demo-celeste-1", date: "2023-02-11", seconds: 3314.88, time: "55:14.880", video: null, runUrl: "https://www.speedrun.com/celeste", platform: "PC", emulated: false, detail: null, current: false },
+        { id: "demo-celeste-2", date: "2023-05-27", seconds: 2943.21, time: "49:03.210", video: null, runUrl: "https://www.speedrun.com/celeste", platform: "PC", emulated: false, detail: null, current: false },
+        { id: "demo-celeste-3", date: "2023-10-08", seconds: 2631.62, time: "43:51.620", video: null, runUrl: "https://www.speedrun.com/celeste", platform: "PC", emulated: false, detail: null, current: false },
+        { id: "demo-celeste-4", date: "2024-03-16", seconds: 2486.94, time: "41:26.940", video: null, runUrl: "https://www.speedrun.com/celeste", platform: "PC", emulated: false, detail: null, current: true },
+      ],
+    },
+    {
+      id: "demo-sm64-16-star",
+      gameId: "o1y9wo6q",
+      gameName: "Super Mario 64",
+      gameAbbreviation: "sm64",
+      gameCover: "https://www.speedrun.com/static/game/o1y9wo6q/cover?v=82fa0a4",
+      categoryName: "16 Star",
+      levelName: null,
+      variant: "N64",
+      timingMethod: "realtime",
+      runs: [
+        { id: "demo-sm64-1", date: "2023-07-02", seconds: 2037.4, time: "33:57.400", video: null, runUrl: "https://www.speedrun.com/sm64", platform: "Nintendo 64", emulated: false, detail: null, current: false },
+        { id: "demo-sm64-2", date: "2023-11-19", seconds: 1808.73, time: "30:08.730", video: null, runUrl: "https://www.speedrun.com/sm64", platform: "Nintendo 64", emulated: false, detail: null, current: false },
+        { id: "demo-sm64-3", date: "2024-06-22", seconds: 1682.55, time: "28:02.550", video: null, runUrl: "https://www.speedrun.com/sm64", platform: "Nintendo 64", emulated: false, detail: null, current: true },
+      ],
+    },
+    {
+      id: "demo-portal-inbounds",
+      gameId: "4pd0n31e",
+      gameName: "Portal",
+      gameAbbreviation: "portal",
+      gameCover: "https://www.speedrun.com/static/game/4pd0n31e/cover?v=1d3445a",
+      categoryName: "Inbounds",
+      levelName: null,
+      variant: "PC",
+      timingMethod: "realtime_noloads",
+      runs: [
+        { id: "demo-portal-1", date: "2024-01-13", seconds: 1923.3, time: "32:03.300", video: null, runUrl: "https://www.speedrun.com/portal", platform: "PC", emulated: false, detail: null, current: false },
+        { id: "demo-portal-2", date: "2024-04-06", seconds: 1651.84, time: "27:31.840", video: null, runUrl: "https://www.speedrun.com/portal", platform: "PC", emulated: false, detail: null, current: false },
+        { id: "demo-portal-3", date: "2024-09-14", seconds: 1335.82, time: "22:15.820", video: null, runUrl: "https://www.speedrun.com/portal", platform: "PC", emulated: false, detail: null, current: true },
+      ],
+    },
+  ],
+};

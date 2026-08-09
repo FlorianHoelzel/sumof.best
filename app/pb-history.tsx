@@ -2155,8 +2155,10 @@ export default function PBHistory({
       <footer className="archive-footer">
         <span>SUM OF BEST / ARCHIVE</span>
         <p>
-          Data sourced from speedrun.com · Includes verified obsolete runs ·
-          Updated {displayDate(data.generatedAt.slice(0, 10))}
+          {data.source === "demo"
+            ? "Fictional runner and sample run data"
+            : "Data sourced from speedrun.com · Includes verified obsolete runs"}
+          {" · "}Updated {displayDate(data.generatedAt.slice(0, 10))}
         </p>
         <a href="#top">BACK TO TOP ↑</a>
       </footer>

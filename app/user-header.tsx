@@ -14,6 +14,7 @@ export default function UserHeader({
   const [avatarFailed, setAvatarFailed] = useState(false);
   const archivePath = `/${encodeURIComponent(profile.name)}`;
   const profileAvatar = profile.avatar;
+  const isDemo = profile.profileUrl.startsWith("/");
 
   return (
     <header className="site-header">
@@ -65,8 +66,12 @@ export default function UserHeader({
         <a href={`${archivePath}#games`}>THE RUNS</a>
         <a href={`${archivePath}/feed`}>PB FEED</a>
         <a href={`${archivePath}/passport`}>PASSPORT</a>
-        <a href={profile.profileUrl} target="_blank" rel="noreferrer">
-          SPEEDRUN.COM ↗
+        <a
+          href={profile.profileUrl}
+          target={isDemo ? undefined : "_blank"}
+          rel={isDemo ? undefined : "noreferrer"}
+        >
+          {isDemo ? "DEMO DATA" : "SPEEDRUN.COM ↗"}
         </a>
       </nav>
     </header>

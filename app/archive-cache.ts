@@ -11,6 +11,7 @@ import {
 import path from "node:path";
 import type { SiteData } from "./pb-history";
 import { buildUserArchive } from "./speedrun-archive";
+import { demoRunnerData } from "./data/demo-runner";
 
 const CACHE_SCHEMA_VERSION = 4;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -195,6 +196,9 @@ function startBuild(username: string, key: string) {
 export async function getUserArchive(username: string): Promise<SiteData | null> {
   const cleanUsername = username.trim().replace(/^@/, "");
   if (!cleanUsername) return null;
+  if (cleanUsername.toLowerCase() === demoRunnerData.profile.name) {
+    return demoRunnerData;
+  }
 
   const key = cacheKey(cleanUsername);
   const cached = memoryCache.get(key) ?? await readEnvelope(pathsFor(key).archive);

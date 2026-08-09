@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requestSpeedrunJson, SpeedrunApiError } from "../../speedrun-api";
+import { demoRunnerData } from "../../data/demo-runner";
 
 const LOOKUP_FRESH_MS = 5 * 60 * 1_000;
 const LOOKUP_STALE_MS = 24 * 60 * 60 * 1_000;
@@ -71,6 +72,17 @@ export async function GET(request: Request) {
       { error: "Enter a valid speedrun.com username." },
       { status: 400, headers: { "Cache-Control": "no-store" } },
     );
+  }
+
+  if (username.toLowerCase() === demoRunnerData.profile.name) {
+    return NextResponse.json({
+      id: "demo",
+      name: demoRunnerData.profile.name,
+      country: demoRunnerData.profile.country,
+      avatar: demoRunnerData.profile.avatar,
+      profileUrl: demoRunnerData.profile.profileUrl,
+      archiveUrl: `/${demoRunnerData.profile.name}`,
+    });
   }
 
   try {
