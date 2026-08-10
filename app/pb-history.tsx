@@ -1899,24 +1899,24 @@ export default function PBHistory({
             </h1>
             {heroVariant === "stats-latest" ? (
               <>
-                <dl className="hero-stats" aria-label="Archive totals">
-                  <div>
-                    <dt>PBs</dt>
-                    <dd>{data.stats.pbRuns}</dd>
-                  </div>
-                  <div>
-                    <dt>Games</dt>
-                    <dd>{data.stats.games}</dd>
-                  </div>
-                  <div>
-                    <dt>Categories</dt>
-                    <dd>{data.stats.histories}</dd>
-                  </div>
-                  <div>
-                    <dt>Active years</dt>
-                    <dd>{yearsTracked}</dd>
-                  </div>
-                </dl>
+                <div className="hero-summary" aria-label="Archive totals">
+                  <p>
+                    <strong>{data.stats.games} games</strong>,{" "}
+                    <strong>{data.stats.histories} categories</strong>, and{" "}
+                    <strong>{data.stats.pbRuns} PBs</strong> collected over{" "}
+                    <strong>
+                      {yearsTracked} {yearsTracked === 1 ? "year" : "years"}
+                    </strong>
+                    .
+                  </p>
+                  <p>
+                    That adds up to {totalHours} {totalHours === 1 ? "hour" : "hours"}
+                    {" "}and {totalMinutes}{" "}
+                    {totalMinutes === 1 ? "minute" : "minutes"} of finished runs
+                    across {data.stats.platforms}{" "}
+                    {data.stats.platforms === 1 ? "platform" : "platforms"}.
+                  </p>
+                </div>
                 {selectedEntry && selectedEvent ? (
                   <div className="hero-career-timeline">
                     <div className="hero-career-timeline-heading">

@@ -73,7 +73,7 @@
 
 .hero-stats-latest .hero-profile,
 .hero-stats-latest .hero-core h1,
-.hero-stats-latest .hero-stats {
+.hero-stats-latest .hero-summary {
   transform: translateY(-16px);
 }
 
@@ -97,6 +97,27 @@
   --hero-title-max: 72px;
   --hero-title-min: 40px;
   margin-bottom: clamp(22px, 2vw, 30px);
+}
+
+.hero-stats-latest .hero-summary {
+  max-width: 690px;
+}
+
+.hero-stats-latest .hero-summary p {
+  color: #b8bab3;
+  font-size: clamp(18px, 1.45vw, 22px);
+  line-height: 1.5;
+  margin: 0;
+  max-width: none;
+}
+
+.hero-stats-latest .hero-summary p + p {
+  margin-top: clamp(14px, 1.3vw, 20px);
+}
+
+.hero-stats-latest .hero-summary strong {
+  color: var(--paper);
+  font-weight: 800;
 }
 
 .hero-stats-latest .hero-profile img {
@@ -417,7 +438,7 @@
 
   .hero-stats-latest .hero-profile,
   .hero-stats-latest .hero-core h1,
-  .hero-stats-latest .hero-stats,
+  .hero-stats-latest .hero-summary,
   .hero-stats-latest .hero-career-timeline,
   .hero-stats-latest .primary-link {
     transform: none;
