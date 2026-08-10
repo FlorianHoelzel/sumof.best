@@ -11,6 +11,7 @@ main.v2-landing {
     var(--v2-ink);
   background-size: 38px 38px;
   color: var(--v2-paper);
+  display: block;
   min-height: 100dvh;
 }
 
@@ -1362,6 +1363,7 @@ main.v2-landing {
     grid-template-columns: 1fr;
     min-height: calc(100dvh - 64px);
     padding-block: 72px 132px;
+    width: 100%;
   }
 
   .v2-search-panel {
@@ -1449,20 +1451,29 @@ main.v2-landing {
   }
 
   .v2-archive-intro h1 {
-    font-size: clamp(52px, 16vw, 72px);
+    font-size: clamp(45px, 14.5vw, 64px);
+    white-space: nowrap;
+  }
+
+  .v2-archive-intro p {
+    font-size: clamp(18px, 5.2vw, 21px);
+    margin-top: 20px;
   }
 
   .v2-search-panel {
-    padding: 20px;
+    max-width: none;
+    padding: 18px;
   }
 
   .v2-search-row {
     grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 52px 48px;
+    min-height: 0;
   }
 
   .v2-search-row button {
     grid-column: 1 / -1;
-    min-height: 46px;
+    min-height: 48px;
   }
 
   .v2-lookup-result {
@@ -1499,6 +1510,50 @@ main.v2-landing {
   .v2-demo-overview-body,
   .v2-demo-timeline-body {
     padding: 22px 18px;
+  }
+
+  .v2-demo-overview-crop .peak-card {
+    grid-template-rows: 42px auto auto;
+  }
+
+  .v2-demo-overview-crop .peak-body {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .v2-demo-overview-crop .peak-year {
+    border-bottom: 1px solid var(--line);
+    border-right: 0;
+    min-height: 148px;
+    padding: 24px 18px;
+  }
+
+  .v2-demo-overview-crop .peak-monthly {
+    min-height: 220px;
+    padding: 22px 18px 16px;
+  }
+
+  .v2-demo-overview-crop .peak-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .v2-demo-overview-crop .peak-facts > div {
+    min-height: 84px;
+    padding: 15px 18px;
+  }
+
+  .v2-demo-overview-crop .peak-facts > div:not(:last-child) {
+    border-bottom: 1px solid var(--line);
+    border-right: 0;
+  }
+
+  .v2-demo-overview-crop .peak-facts span,
+  .v2-demo-overview-crop .peak-facts small {
+    font-size: 8px;
+  }
+
+  .v2-demo-overview-crop .peak-facts strong {
+    font-size: 16px;
   }
 
   .v2-demo-stats {
@@ -1564,6 +1619,7 @@ main.v2-landing {
   }
 
   .v2-demo-latest-cover {
+    height: 200px;
     min-height: 200px;
   }
 
