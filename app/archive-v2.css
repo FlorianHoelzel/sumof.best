@@ -502,7 +502,7 @@
 .archive-share-actions button,
 .archive-share-actions a {
   background: transparent;
-  border: 1px solid var(--acid);
+  border: 1px solid var(--line);
   color: var(--muted);
   cursor: pointer;
   font-size: 10px;
@@ -526,7 +526,7 @@
 .embed-dialog-actions button,
 .embed-dialog-actions a {
   background: transparent;
-  border: 1px solid var(--acid);
+  border: 1px solid var(--line);
   color: var(--muted);
   padding: 13px 16px;
   transition:
