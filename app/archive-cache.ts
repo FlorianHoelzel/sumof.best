@@ -225,12 +225,6 @@ export function warmUserArchive(username: string) {
 
 export type DiscoverableArchive = {
   name: string;
-  lastModified: string;
-  pbRuns: number;
-  games: number;
-  histories: number;
-  firstRunDate: string;
-  latestRunDate: string;
 };
 
 function directoryExclusions() {
@@ -240,28 +234,6 @@ function directoryExclusions() {
       .map((name) => normalizedUsername(name))
       .filter(Boolean),
   );
-}
-
-function discoverableArchive(data: SiteData, lastModified: string) {
-  let firstRunDate = "";
-  let latestRunDate = "";
-
-  for (const history of data.histories) {
-    for (const run of history.runs) {
-      if (!firstRunDate || run.date < firstRunDate) firstRunDate = run.date;
-      if (!latestRunDate || run.date > latestRunDate) latestRunDate = run.date;
-    }
-  }
-
-  return {
-    name: data.profile.name,
-    lastModified,
-    pbRuns: data.stats.pbRuns,
-    games: data.stats.games,
-    histories: data.stats.histories,
-    firstRunDate,
-    latestRunDate,
-  } satisfies DiscoverableArchive;
 }
 
 export async function listDiscoverableArchives(): Promise<DiscoverableArchive[]> {
@@ -295,16 +267,10 @@ export async function listDiscoverableArchives(): Promise<DiscoverableArchive[]>
     }
 
     const name = envelope.data.profile.name;
-    archives.set(
-      name.toLocaleLowerCase("en-US"),
-      discoverableArchive(
-        envelope.data,
-        envelope.data.generatedAt || envelope.storedAt,
-      ),
-    );
+    archives.set(name.toLocaleLowerCase("en-US"), { name });
   }
 
   return [...archives.values()].sort((a, b) =>
-    b.lastModified.localeCompare(a.lastModified),
+    a.name.localeCompare(b.name, "en-US"),
   );
 }
