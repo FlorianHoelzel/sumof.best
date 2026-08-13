@@ -162,6 +162,7 @@ test("server-renders the archive overview", async () => {
     /property="og:image" content="https:\/\/sumof\.best\/Volpey\/social-card"/i,
   );
   assert.match(html, /name="twitter:card" content="summary_large_image"/i);
+  assert.match(html, />SHARE<\/button>/i);
   assert.match(html, /"@type":"ProfilePage"/i);
   assert.match(html, /href="\/">SUM OF BEST<\/a>/);
   assert.match(html, /class="accent-name" href="\/volpey">VOLPEY<\/a>/i);
@@ -181,6 +182,21 @@ test("server-renders the archive overview", async () => {
   assert.match(socialCard.headers.get("content-type") ?? "", /^image\/png\b/i);
   assert.match(socialCard.headers.get("cache-control") ?? "", /s-maxage=86400/i);
   assert.ok((await socialCard.arrayBuffer()).byteLength > 10_000);
+
+  const celesteHistory = encodeURIComponent("o1y9j9v6|7kjpl1gk|full-game");
+  const sharedCategory = await render(`/Volpey?history=${celesteHistory}`);
+  assert.equal(sharedCategory.status, 200);
+  const sharedCategoryHtml = await sharedCategory.text();
+  assert.match(sharedCategoryHtml, /<title>Volpey[^<]+Celeste PB history/i);
+  assert.match(
+    sharedCategoryHtml,
+    /property="og:image" content="https:\/\/sumof\.best\/Volpey\/social-card\?history=o1y9j9v6%7C7kjpl1gk%7Cfull-game"/i,
+  );
+
+  const gameCard = await render(`/Volpey/social-card?history=${celesteHistory}`);
+  assert.equal(gameCard.status, 200);
+  assert.match(gameCard.headers.get("content-type") ?? "", /^image\/png\b/i);
+  assert.ok((await gameCard.arrayBuffer()).byteLength > 10_000);
 });
 
 test("keeps the fictional demo runner out of search results", async () => {

@@ -472,3 +472,109 @@
     border-top: 1px solid var(--line);
   }
 }
+
+.share-trigger {
+  background: var(--accent-gradient);
+  border: 1px solid transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  padding: 10px 12px;
+  transition: filter 160ms ease;
+}
+
+.share-trigger:hover,
+.share-trigger:focus-visible {
+  filter: brightness(1.08);
+}
+
+.archive-share-dialog {
+  max-width: 880px;
+}
+
+.archive-share-preview {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.archive-share-preview img {
+  aspect-ratio: 1200 / 630;
+  display: block;
+  height: auto;
+  object-fit: cover;
+  width: 100%;
+}
+
+.archive-share-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.archive-share-actions button,
+.archive-share-actions a {
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  padding: 13px 16px;
+  white-space: nowrap;
+}
+
+.archive-share-primary {
+  background: var(--accent-gradient);
+  border: 1px solid transparent;
+  color: var(--ink);
+}
+
+.archive-share-secondary {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--paper);
+}
+
+.archive-share-actions a {
+  border: 1px solid var(--acid);
+  color: var(--acid);
+}
+
+.archive-share-actions button:hover,
+.archive-share-actions button:focus-visible,
+.archive-share-actions a:hover,
+.archive-share-actions a:focus-visible {
+  filter: brightness(1.1);
+}
+
+.archive-share-error {
+  color: #e08f7e !important;
+  margin: 12px 0 0 !important;
+}
+
+@media (max-width: 620px) {
+  .history-actions {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .history-actions .improvement {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  .archive-share-actions {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .archive-share-actions a {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+}

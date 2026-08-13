@@ -11,8 +11,19 @@ function safeAccent(value: string | null | undefined) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#c8c7c2";
 }
 
+function compactDuration(totalSeconds: number) {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+
+  if (hours) return `${hours}h ${minutes}m`;
+  if (minutes) return `${minutes}m ${remainder}s`;
+  return `${remainder}s`;
+}
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ username: string }> },
 ) {
   const { username } = await params;
@@ -25,6 +36,28 @@ export async function GET(
   if (!data) return new Response("Archive not found", { status: 404 });
 
   const name = data.profile.name;
+  const requestedHistory = new URL(request.url).searchParams.get("history");
+  const sharedHistory = requestedHistory
+    ? data.histories.find((history) => history.id === requestedHistory)
+    : undefined;
+  const sharedCategory = sharedHistory
+    ? [sharedHistory.categoryName, sharedHistory.levelName, sharedHistory.variant]
+        .filter(Boolean)
+        .join(" / ")
+    : "";
+  const sharedCurrent = sharedHistory?.runs.at(-1);
+  const sharedFirst = sharedHistory?.runs[0];
+  const sharedImprovement =
+    sharedHistory && sharedCurrent && sharedFirst && sharedHistory.runs.length > 1
+      ? compactDuration(sharedFirst.seconds - sharedCurrent.seconds)
+      : "First PB";
+  const sharedGameFontSize = !sharedHistory
+    ? 68
+    : sharedHistory.gameName.length > 38
+      ? 46
+      : sharedHistory.gameName.length > 24
+        ? 56
+        : 70;
   const accent = safeAccent(data.profile.nameColor?.from);
   const years = data.histories
     .flatMap((history) => history.runs)
@@ -34,6 +67,36 @@ export async function GET(
   const yearRange = years.length
     ? `${Math.min(...years)} / ${Math.max(...years)}`
     : "ARCHIVE READY";
+  const sharedYears = sharedHistory?.runs
+    .map((run) => Number(run.date.slice(0, 4)))
+    .filter(Number.isFinite);
+  const displayYearRange = sharedYears?.length
+    ? `${Math.min(...sharedYears)} / ${Math.max(...sharedYears)}`
+    : yearRange;
+  const chartWidth = 610;
+  const chartHeight = 108;
+  const chartPadding = 7;
+  const chartRuns = sharedHistory?.runs ?? [];
+  const chartValues = chartRuns.map((run) => run.seconds);
+  const chartMin = chartValues.length ? Math.min(...chartValues) : 0;
+  const chartMax = chartValues.length ? Math.max(...chartValues) : 1;
+  const chartSpan = Math.max(chartMax - chartMin, 1);
+  const chartPoints = chartRuns.map((run, index) => ({
+    x:
+      chartRuns.length === 1
+        ? chartWidth / 2
+        : chartPadding +
+          (index / (chartRuns.length - 1)) * (chartWidth - chartPadding * 2),
+    y:
+      chartRuns.length === 1
+        ? chartHeight / 2
+        : chartPadding +
+          ((chartMax - run.seconds) / chartSpan) *
+            (chartHeight - chartPadding * 2),
+  }));
+  const chartPath = chartPoints
+    .map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`)
+    .join(" ");
   const gridColumns = Array.from({ length: 32 }, (_, index) => index * 38);
   const gridRows = Array.from({ length: 17 }, (_, index) => index * 38);
 
@@ -57,7 +120,6 @@ export async function GET(
             position: "absolute",
             inset: 0,
             display: "flex",
-            opacity: 0.58,
           }}
         >
           {gridColumns.map((left) => (
@@ -69,7 +131,7 @@ export async function GET(
                 top: 0,
                 width: 1,
                 height: 630,
-                background: "#242422",
+                background: "rgba(255,255,255,0.018)",
               }}
             />
           ))}
@@ -82,7 +144,7 @@ export async function GET(
                 top,
                 width: 1200,
                 height: 1,
-                background: "#242422",
+                background: "rgba(255,255,255,0.018)",
               }}
             />
           ))}
@@ -119,11 +181,208 @@ export async function GET(
               letterSpacing: "0.13em",
             }}
           >
-            SPEEDRUN.COM PB ARCHIVE
+            {sharedHistory ? "SHAREABLE GAME PB CARD" : "SPEEDRUN.COM PB ARCHIVE"}
           </span>
         </header>
 
         <main style={{ display: "flex", flex: 1, padding: "40px 54px 34px" }}>
+          {sharedHistory && sharedCurrent ? (
+            <>
+              <section
+                style={{
+                  width: 742,
+                  display: "flex",
+                  flexDirection: "column",
+                  paddingRight: 48,
+                  borderRight: "1px solid #444440",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    color: accent,
+                    fontSize: 17,
+                    fontWeight: 700,
+                    letterSpacing: "0.12em",
+                  }}
+                >
+                  <span>@{name.toUpperCase()}</span>
+                  <span style={{ color: "#666660" }}>/</span>
+                  <span>GAME PB HISTORY</span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    marginTop: 26,
+                    fontSize: sharedGameFontSize,
+                    fontWeight: 700,
+                    letterSpacing: "-0.045em",
+                    lineHeight: 0.94,
+                  }}
+                >
+                  {sharedHistory.gameName}
+                </div>
+
+                <span
+                  style={{
+                    color: accent,
+                    fontSize: 27,
+                    fontWeight: 700,
+                    letterSpacing: "-0.025em",
+                    lineHeight: 1.12,
+                    marginTop: 22,
+                  }}
+                >
+                  {sharedCategory}
+                </span>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: 610,
+                    marginTop: 20,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      color: "#9d9d99",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.11em",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <span>PB PROGRESSION</span>
+                    <span>{chartRuns.length} VERIFIED PB{chartRuns.length === 1 ? "" : "S"}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      height: chartHeight,
+                      width: chartWidth,
+                      borderTop: "1px solid #444440",
+                      borderBottom: "1px solid #444440",
+                    }}
+                  >
+                    <svg width={chartWidth} height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                      {chartPath && (
+                        <path
+                          d={chartPath}
+                          fill="none"
+                          stroke={accent}
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      )}
+                      {chartPoints.map((point, index) => (
+                        <circle
+                          key={`${point.x}-${point.y}`}
+                          cx={point.x}
+                          cy={point.y}
+                          r={index === chartPoints.length - 1 ? 6 : 4}
+                          fill={index === chartPoints.length - 1 ? accent : "#0e0e0e"}
+                          stroke={accent}
+                          strokeWidth="3"
+                        />
+                      ))}
+                    </svg>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      color: "#9d9d99",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.08em",
+                      marginTop: 8,
+                    }}
+                  >
+                    <span>{sharedFirst?.date.slice(0, 10)}</span>
+                    <span>{sharedCurrent.date.slice(0, 10)}</span>
+                  </div>
+                </div>
+              </section>
+
+              <aside
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  paddingLeft: 42,
+                }}
+              >
+                <span
+                  style={{
+                    color: "#9d9d99",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    letterSpacing: "0.13em",
+                  }}
+                >
+                  CURRENT PERSONAL BEST
+                </span>
+                <strong
+                  style={{
+                    color: accent,
+                    fontSize: sharedCurrent.time.length > 9 ? 47 : 58,
+                    letterSpacing: "-0.045em",
+                    lineHeight: 1,
+                    margin: "13px 0 25px",
+                  }}
+                >
+                  {sharedCurrent.time}
+                </strong>
+
+                {[
+                  [sharedHistory.runs.length, "PB MILESTONES"],
+                  [sharedImprovement.toUpperCase(), "TOTAL TIME SAVED"],
+                  [sharedCurrent.date.slice(0, 10), "CURRENT PB DATE"],
+                ].map(([value, label]) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      borderTop: "1px solid #444440",
+                      padding: "10px 0 9px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "#9d9d99",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      {label}
+                    </span>
+                    <span
+                      style={{
+                        color: "#f1f0ec",
+                        fontSize: 20,
+                        fontWeight: 700,
+                        marginTop: 3,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {value}
+                    </span>
+                  </div>
+                ))}
+              </aside>
+            </>
+          ) : (
+            <>
           <section
             style={{
               width: 742,
@@ -228,6 +487,8 @@ export async function GET(
               </div>
             ))}
           </aside>
+            </>
+          )}
         </main>
 
         <footer
@@ -245,7 +506,7 @@ export async function GET(
             letterSpacing: "0.11em",
           }}
         >
-          <span>{yearRange}</span>
+          <span>{displayYearRange}</span>
           <span style={{ color: accent }}>SUMOF.BEST/{name.toUpperCase()}</span>
         </footer>
       </div>

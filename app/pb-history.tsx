@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import ArchiveShareDialog from "./archive-share-dialog";
 import {
   archiveId,
   archiveStyle,
@@ -264,6 +265,7 @@ function HistoryBlock({
 }) {
   const [selected, setSelected] = useState(history.runs.length - 1);
   const [showEmbed, setShowEmbed] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
   const twitchParent =
     showEmbed && typeof window !== "undefined" ? window.location.hostname : null;
@@ -298,6 +300,13 @@ function HistoryBlock({
           <h3>{title}</h3>
         </div>
         <div className="history-actions">
+          <button
+            className="share-trigger"
+            type="button"
+            onClick={() => setShowShare(true)}
+          >
+            SHARE
+          </button>
           <button
             className="embed-trigger"
             type="button"
@@ -475,6 +484,16 @@ function HistoryBlock({
           </div>,
           document.body,
         )}
+      {showShare && (
+        <ArchiveShareDialog
+          username={username}
+          historyId={history.id}
+          historyAnchor={historyAnchor(history)}
+          gameName={history.gameName}
+          categoryLabel={title}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </article>
   );
 }

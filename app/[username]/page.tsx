@@ -18,10 +18,13 @@ async function archiveFor(username: string) {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ history?: string | string[] }>;
 }): Promise<Metadata> {
   const { username } = await params;
+  const query = await searchParams;
   const requestedName = decodeURIComponent(username);
   const data = await archiveFor(username);
 
@@ -34,14 +37,33 @@ export async function generateMetadata({
 
   const name = data.profile.name;
   const canonical = `/${encodeURIComponent(name)}`;
-  const socialImage = `${canonical}/social-card`;
-  const title = `${name}'s speedrun PB history`;
-  const description = `${data.stats.pbRuns} personal-best milestones across ${data.stats.games} games and ${data.stats.histories} categories, including current and obsolete speedruns.`;
+  const requestedHistory = Array.isArray(query.history)
+    ? query.history[0]
+    : query.history;
+  const sharedHistory = requestedHistory
+    ? data.histories.find((history) => history.id === requestedHistory)
+    : undefined;
+  const sharedCategory = sharedHistory
+    ? [sharedHistory.categoryName, sharedHistory.levelName, sharedHistory.variant]
+        .filter(Boolean)
+        .join(" / ")
+    : "";
+  const socialImage = sharedHistory
+    ? `${canonical}/social-card?history=${encodeURIComponent(sharedHistory.id)}`
+    : `${canonical}/social-card`;
+  const title = sharedHistory
+    ? `${name}'s ${sharedHistory.gameName} PB history`
+    : `${name}'s speedrun PB history`;
+  const description = sharedHistory
+    ? `${sharedCategory}: ${sharedHistory.runs.length} verified personal-best milestone${sharedHistory.runs.length === 1 ? "" : "s"}, with a current time of ${sharedHistory.runs.at(-1)!.time}.`
+    : `${data.stats.pbRuns} personal-best milestones across ${data.stats.games} games and ${data.stats.histories} categories, including current and obsolete speedruns.`;
   const image = {
     url: socialImage,
     width: 1200,
     height: 630,
-    alt: `${name}'s Sum of Best speedrun archive`,
+    alt: sharedHistory
+      ? `${name}'s ${sharedHistory.gameName} ${sharedCategory} PB card`
+      : `${name}'s Sum of Best speedrun archive`,
   };
 
   return {
@@ -55,7 +77,9 @@ export async function generateMetadata({
       title,
       description,
       type: "website",
-      url: canonical,
+      url: sharedHistory
+        ? `${canonical}?history=${encodeURIComponent(sharedHistory.id)}`
+        : canonical,
       siteName: "Sum of Best",
       locale: "en_US",
       images: [image],
