@@ -3,6 +3,7 @@ import {
   access,
   mkdir,
   readFile,
+  readdir,
   rename,
   stat,
   unlink,
@@ -220,4 +221,49 @@ export function warmUserArchive(username: string) {
   void getUserArchive(username).catch((error) => {
     console.error(`Unable to warm archive for ${username}`, error);
   });
+}
+
+export type DiscoverableArchive = {
+  name: string;
+  lastModified: string;
+};
+
+export async function listDiscoverableArchives(): Promise<DiscoverableArchive[]> {
+  const directory = cacheDirectory();
+  let files: string[];
+
+  try {
+    files = await readdir(directory);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      console.error("Unable to list archive cache entries", error);
+    }
+    return [];
+  }
+
+  const now = Date.now();
+  const archives = new Map<string, DiscoverableArchive>();
+
+  for (const file of files) {
+    if (!file.endsWith(".json") || archives.size >= 49_000) continue;
+
+    const envelope = await readEnvelope(path.join(directory, file));
+    if (
+      !envelope?.data?.histories.length ||
+      now >= Date.parse(envelope.expiresAt) ||
+      envelope.data.source === "demo"
+    ) {
+      continue;
+    }
+
+    const name = envelope.data.profile.name;
+    archives.set(name.toLocaleLowerCase("en-US"), {
+      name,
+      lastModified: envelope.data.generatedAt || envelope.storedAt,
+    });
+  }
+
+  return [...archives.values()].sort((a, b) =>
+    b.lastModified.localeCompare(a.lastModified),
+  );
 }

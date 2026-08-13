@@ -35,7 +35,9 @@ test("server-renders the Sum of Best landing page", async () => {
 
   const html = await response.text();
   assert.match(html, /Sum of Best/i);
-  assert.match(html, /speedrun\.com username/i);
+  assert.match(html, /Your personal PB Archive/i);
+  assert.match(html, /Check out a demo archive/i);
+  assert.match(html, /"@type":"WebApplication"/i);
   assert.match(
     html,
     /<script[^>]+src="https:\/\/stats\.sumof\.best\/script\.js"[^>]+data-website-id="b586f22e-d4e3-4a55-9154-c9f44325a61c"/i,
@@ -59,6 +61,7 @@ test("serves search-engine discovery files", async () => {
   assert.equal(sitemap.status, 200);
   const sitemapXml = await sitemap.text();
   assert.match(sitemapXml, /<loc>https:\/\/sumof\.best<\/loc>/);
+  assert.match(sitemapXml, /<loc>https:\/\/sumof\.best\/Volpey<\/loc>/);
 });
 
 test("keeps the required public assets", async () => {
@@ -173,6 +176,12 @@ test("server-renders the archive overview", async () => {
   assert.match(socialCard.headers.get("content-type") ?? "", /^image\/png\b/i);
   assert.match(socialCard.headers.get("cache-control") ?? "", /s-maxage=86400/i);
   assert.ok((await socialCard.arrayBuffer()).byteLength > 10_000);
+});
+
+test("keeps the fictional demo runner out of search results", async () => {
+  const response = await render("/demo_runner");
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /name="robots" content="noindex, nofollow"/i);
 });
 
 test("serves a fresh generated archive from the durable cache", async () => {

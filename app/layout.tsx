@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const title = "Sum of Best — Your speedrun PB history";
+  const title = "Sum of Best - Your speedrun PB history";
   const description =
     "Turn any public speedrun.com profile into an interactive history of current and obsolete personal bests.";
 
