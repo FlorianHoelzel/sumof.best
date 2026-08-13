@@ -1763,6 +1763,36 @@ export default function PBHistory({
 }) {
   const games = useMemo(() => archiveGames(data.histories), [data.histories]);
 
+  useEffect(() => {
+    const from = data.profile.nameColor?.from;
+    if (!from) return;
+
+    const to = data.profile.nameColor?.to ?? from;
+    const variables = {
+      "--acid": from,
+      "--acid-secondary": to,
+      "--accent-gradient":
+        to !== from ? `linear-gradient(135deg, ${from}, ${to})` : from,
+    };
+    const previous = Object.fromEntries(
+      Object.keys(variables).map((name) => [
+        name,
+        document.body.style.getPropertyValue(name),
+      ]),
+    );
+
+    Object.entries(variables).forEach(([name, value]) => {
+      document.body.style.setProperty(name, value);
+    });
+
+    return () => {
+      Object.entries(previous).forEach(([name, value]) => {
+        if (value) document.body.style.setProperty(name, value);
+        else document.body.style.removeProperty(name);
+      });
+    };
+  }, [data.profile.nameColor?.from, data.profile.nameColor?.to]);
+
   const datedRuns = data.histories
     .flatMap((history) => history.runs)
     .filter((run) => run.date !== "Unknown");
