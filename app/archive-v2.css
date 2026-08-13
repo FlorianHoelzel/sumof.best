@@ -519,8 +519,41 @@
 .archive-share-actions button:focus-visible,
 .archive-share-actions a:hover,
 .archive-share-actions a:focus-visible {
-  border-color: #8b8b86;
-  color: var(--paper);
+  border-color: var(--acid);
+  color: var(--acid);
+}
+
+.embed-dialog-actions button,
+.embed-dialog-actions a {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 13px 16px;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.embed-dialog-actions button:hover,
+.embed-dialog-actions button:focus-visible,
+.embed-dialog-actions a:hover,
+.embed-dialog-actions a:focus-visible {
+  border-color: var(--acid);
+  color: var(--acid);
+}
+
+.chart-improvement {
+  bottom: 13%;
+  color: var(--acid);
+  font-size: 9px;
+  font-weight: 900;
+  left: 50%;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 2;
 }
 
 .archive-share-error {
@@ -533,11 +566,6 @@
     align-items: stretch;
     display: grid;
     grid-template-columns: 1fr 1fr;
-  }
-
-  .history-actions .improvement {
-    grid-column: 1 / -1;
-    text-align: center;
   }
 
   .archive-share-actions {

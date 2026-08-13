@@ -23,7 +23,7 @@ export default function ArchiveShareDialog({
   const [status, setStatus] = useState<ShareStatus>("idle");
   const archivePath = `/${encodeURIComponent(username)}`;
   const historyQuery = `history=${encodeURIComponent(historyId)}`;
-  const cardPath = `${archivePath}/social-card?${historyQuery}&v=2`;
+  const cardPath = `${archivePath}/social-card?${historyQuery}&v=4`;
   const sharedArchivePath = `${archivePath}?${historyQuery}#${historyAnchor}`;
   const filename = `${username.toLocaleLowerCase("en-US")}-${gameName
     .toLocaleLowerCase("en-US")

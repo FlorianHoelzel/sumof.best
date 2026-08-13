@@ -169,6 +169,10 @@ function ProgressChart({
   const path = points
     .map((point, index) => `${index ? "L" : "M"}${point.x},${point.y}`)
     .join(" ");
+  const totalSaved =
+    runs.length > 1
+      ? `${Math.round(runs[0].seconds - runs.at(-1)!.seconds)}s SAVED`
+      : "CURRENT PB";
 
   return (
     <div className="chart-wrap">
@@ -177,6 +181,7 @@ function ProgressChart({
         <span>{runs.length} PB{runs.length === 1 ? "" : "S"}</span>
       </div>
       <div className="chart-stage">
+        <span className="chart-improvement">{totalSaved}</span>
         <svg
           className="chart"
           viewBox={`0 0 ${width} ${height}`}
@@ -317,11 +322,6 @@ function HistoryBlock({
           >
             EMBED
           </button>
-          <span className="improvement">
-            {history.runs.length > 1
-              ? `−${Math.round(history.runs[0].seconds - history.runs.at(-1)!.seconds)}s`
-              : "CURRENT PB"}
-          </span>
         </div>
       </div>
 

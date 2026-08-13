@@ -22,7 +22,27 @@ function compactDuration(totalSeconds: number) {
   return `${remainder}s`;
 }
 
-function shareCardCover(source: string | null | undefined) {
+function encodeBase64(bytes: Uint8Array) {
+  const alphabet =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  let encoded = "";
+
+  for (let index = 0; index < bytes.length; index += 3) {
+    const first = bytes[index];
+    const second = bytes[index + 1];
+    const third = bytes[index + 2];
+    const chunk = (first << 16) | ((second ?? 0) << 8) | (third ?? 0);
+
+    encoded += alphabet[(chunk >> 18) & 63];
+    encoded += alphabet[(chunk >> 12) & 63];
+    encoded += second === undefined ? "=" : alphabet[(chunk >> 6) & 63];
+    encoded += third === undefined ? "=" : alphabet[chunk & 63];
+  }
+
+  return encoded;
+}
+
+async function shareCardCover(source: string | null | undefined) {
   if (!source) return null;
 
   try {
@@ -32,7 +52,18 @@ function shareCardCover(source: string | null | undefined) {
       return null;
     }
 
-    return `https://wsrv.nl/?url=${encodeURIComponent(url.toString())}&w=188&h=252&fit=cover&output=png`;
+    const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url.toString())}&w=188&h=252&fit=cover&output=png`;
+    const response = await fetch(proxyUrl, {
+      headers: {
+        Accept: "image/png,image/*;q=0.8",
+        "User-Agent": "sumof.best social card",
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return `data:${response.headers.get("content-type") ?? "image/png"};base64,${encodeBase64(bytes)}`;
   } catch {
     return null;
   }
@@ -74,7 +105,7 @@ export async function GET(
       : sharedHistory.gameName.length > 24
         ? 56
         : 70;
-  const sharedCover = shareCardCover(sharedHistory?.gameCover);
+  const sharedCover = await shareCardCover(sharedHistory?.gameCover);
   const accent = safeAccent(data.profile.nameColor?.from);
   const years = data.histories
     .flatMap((history) => history.runs)
@@ -317,6 +348,7 @@ export async function GET(
                       width: chartWidth,
                       borderTop: "1px solid #444440",
                       borderBottom: "1px solid #444440",
+                      position: "relative",
                     }}
                   >
                     <svg width={chartWidth} height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
@@ -342,6 +374,22 @@ export async function GET(
                         />
                       ))}
                     </svg>
+                    <span
+                      style={{
+                        position: "absolute",
+                        bottom: 8,
+                        left: 0,
+                        right: 0,
+                        display: "flex",
+                        justifyContent: "center",
+                        color: accent,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "0.12em",
+                      }}
+                    >
+                      {sharedImprovement.toUpperCase()} SAVED
+                    </span>
                   </div>
                   <div
                     style={{
@@ -355,9 +403,6 @@ export async function GET(
                     }}
                   >
                     <span>{sharedFirst?.date.slice(0, 10)}</span>
-                    <span style={{ color: accent }}>
-                      {sharedImprovement.toUpperCase()} SAVED
-                    </span>
                     <span>{sharedCurrent.date.slice(0, 10)}</span>
                   </div>
                 </div>
