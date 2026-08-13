@@ -502,7 +502,7 @@
 .archive-share-actions button,
 .archive-share-actions a {
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid var(--acid);
   color: var(--muted);
   cursor: pointer;
   font-size: 10px;
@@ -526,7 +526,7 @@
 .embed-dialog-actions button,
 .embed-dialog-actions a {
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid var(--acid);
   color: var(--muted);
   padding: 13px 16px;
   transition:
@@ -540,20 +540,6 @@
 .embed-dialog-actions a:focus-visible {
   border-color: var(--acid);
   color: var(--acid);
-}
-
-.chart-improvement {
-  bottom: 13%;
-  color: var(--acid);
-  font-size: 9px;
-  font-weight: 900;
-  left: 50%;
-  letter-spacing: 0.1em;
-  pointer-events: none;
-  position: absolute;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  z-index: 2;
 }
 
 .archive-share-error {

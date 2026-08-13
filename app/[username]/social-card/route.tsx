@@ -11,17 +11,6 @@ function safeAccent(value: string | null | undefined) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#c8c7c2";
 }
 
-function compactDuration(totalSeconds: number) {
-  const seconds = Math.max(0, Math.round(totalSeconds));
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainder = seconds % 60;
-
-  if (hours) return `${hours}h ${minutes}m`;
-  if (minutes) return `${minutes}m ${remainder}s`;
-  return `${remainder}s`;
-}
-
 function encodeBase64(bytes: Uint8Array) {
   const alphabet =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -94,10 +83,6 @@ export async function GET(
     : "";
   const sharedCurrent = sharedHistory?.runs.at(-1);
   const sharedFirst = sharedHistory?.runs[0];
-  const sharedImprovement =
-    sharedHistory && sharedCurrent && sharedFirst && sharedHistory.runs.length > 1
-      ? compactDuration(sharedFirst.seconds - sharedCurrent.seconds)
-      : "First PB";
   const sharedGameFontSize = !sharedHistory
     ? 68
     : sharedHistory.gameName.length > 38
@@ -374,22 +359,6 @@ export async function GET(
                         />
                       ))}
                     </svg>
-                    <span
-                      style={{
-                        position: "absolute",
-                        bottom: 8,
-                        left: 0,
-                        right: 0,
-                        display: "flex",
-                        justifyContent: "center",
-                        color: accent,
-                        fontSize: 10,
-                        fontWeight: 700,
-                        letterSpacing: "0.12em",
-                      }}
-                    >
-                      {sharedImprovement.toUpperCase()} SAVED
-                    </span>
                   </div>
                   <div
                     style={{
