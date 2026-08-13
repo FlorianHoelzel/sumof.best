@@ -22,6 +22,22 @@ function compactDuration(totalSeconds: number) {
   return `${remainder}s`;
 }
 
+function shareCardCover(source: string | null | undefined) {
+  if (!source) return null;
+
+  try {
+    const url = new URL(source);
+
+    if (url.protocol !== "https:" || url.hostname !== "www.speedrun.com") {
+      return null;
+    }
+
+    return `https://wsrv.nl/?url=${encodeURIComponent(url.toString())}&w=188&h=252&fit=cover&output=png`;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ username: string }> },
@@ -58,6 +74,7 @@ export async function GET(
       : sharedHistory.gameName.length > 24
         ? 56
         : 70;
+  const sharedCover = shareCardCover(sharedHistory?.gameCover);
   const accent = safeAccent(data.profile.nameColor?.from);
   const years = data.histories
     .flatMap((history) => history.runs)
@@ -216,36 +233,67 @@ export async function GET(
                 <div
                   style={{
                     display: "flex",
-                    flexDirection: "column",
-                    marginTop: 26,
-                    fontSize: sharedGameFontSize,
-                    fontWeight: 700,
-                    letterSpacing: "-0.045em",
-                    lineHeight: 0.94,
+                    alignItems: "flex-end",
+                    justifyContent: "space-between",
+                    marginTop: 20,
+                    width: 610,
                   }}
                 >
-                  {sharedHistory.gameName}
-                </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      maxWidth: sharedCover ? 460 : 610,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        fontSize: sharedGameFontSize,
+                        fontWeight: 700,
+                        letterSpacing: "-0.045em",
+                        lineHeight: 0.94,
+                      }}
+                    >
+                      {sharedHistory.gameName}
+                    </div>
 
-                <span
-                  style={{
-                    color: accent,
-                    fontSize: 27,
-                    fontWeight: 700,
-                    letterSpacing: "-0.025em",
-                    lineHeight: 1.12,
-                    marginTop: 22,
-                  }}
-                >
-                  {sharedCategory}
-                </span>
+                    <span
+                      style={{
+                        color: accent,
+                        fontSize: 27,
+                        fontWeight: 700,
+                        letterSpacing: "-0.025em",
+                        lineHeight: 1.12,
+                        marginTop: 18,
+                      }}
+                    >
+                      {sharedCategory}
+                    </span>
+                  </div>
+
+                  {sharedCover && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={sharedCover}
+                      alt=""
+                      width={94}
+                      height={126}
+                      style={{
+                        border: `2px solid ${accent}`,
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+                </div>
 
                 <div
                   style={{
                     display: "flex",
                     flexDirection: "column",
                     width: 610,
-                    marginTop: 20,
+                    marginTop: 14,
                   }}
                 >
                   <div
@@ -307,6 +355,9 @@ export async function GET(
                     }}
                   >
                     <span>{sharedFirst?.date.slice(0, 10)}</span>
+                    <span style={{ color: accent }}>
+                      {sharedImprovement.toUpperCase()} SAVED
+                    </span>
                     <span>{sharedCurrent.date.slice(0, 10)}</span>
                   </div>
                 </div>
@@ -344,7 +395,6 @@ export async function GET(
 
                 {[
                   [sharedHistory.runs.length, "PB MILESTONES"],
-                  [sharedImprovement.toUpperCase(), "TOTAL TIME SAVED"],
                   [sharedCurrent.date.slice(0, 10), "CURRENT PB DATE"],
                 ].map(([value, label]) => (
                   <div

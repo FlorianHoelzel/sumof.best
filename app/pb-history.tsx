@@ -301,7 +301,7 @@ function HistoryBlock({
         </div>
         <div className="history-actions">
           <button
-            className="share-trigger"
+            className="embed-trigger"
             type="button"
             onClick={() => setShowShare(true)}
           >

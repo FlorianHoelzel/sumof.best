@@ -473,23 +473,6 @@
   }
 }
 
-.share-trigger {
-  background: var(--accent-gradient);
-  border: 1px solid transparent;
-  color: var(--ink);
-  cursor: pointer;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  padding: 10px 12px;
-  transition: filter 160ms ease;
-}
-
-.share-trigger:hover,
-.share-trigger:focus-visible {
-  filter: brightness(1.08);
-}
-
 .archive-share-dialog {
   max-width: 880px;
 }
@@ -518,36 +501,26 @@
 
 .archive-share-actions button,
 .archive-share-actions a {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
   cursor: pointer;
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.12em;
   padding: 13px 16px;
   white-space: nowrap;
-}
-
-.archive-share-primary {
-  background: var(--accent-gradient);
-  border: 1px solid transparent;
-  color: var(--ink);
-}
-
-.archive-share-secondary {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--paper);
-}
-
-.archive-share-actions a {
-  border: 1px solid var(--acid);
-  color: var(--acid);
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
 }
 
 .archive-share-actions button:hover,
 .archive-share-actions button:focus-visible,
 .archive-share-actions a:hover,
 .archive-share-actions a:focus-visible {
-  filter: brightness(1.1);
+  border-color: #8b8b86;
+  color: var(--paper);
 }
 
 .archive-share-error {
